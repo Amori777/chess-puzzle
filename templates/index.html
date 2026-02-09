@@ -1,0 +1,574 @@
+<!-- --------------------------------------------------------- -->
+<!-- Project: Chess Puzzle                                     -->
+<!-- Made by: 3mr | 3mrLogic                                 -->
+<!-- --------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Chess - Stealth Serial Loader</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #111111;
+            --target: #39ff14;
+            --gray-light: #d1d1d1;
+            --gray-mid: #444;
+            --border: #222;
+            --gradient: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+            --danger: #ff4444;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--gray-light);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+        }
+
+        h2 {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--gray-mid);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        #history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        #history-list::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #history-list::-webkit-scrollbar-thumb {
+            background: var(--gray-mid);
+        }
+
+        .history-item {
+            background: var(--gradient);
+            border: 1px solid var(--border);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-item:hover {
+            border-color: #555;
+            background: #151515;
+        }
+
+        .item-actions {
+            position: absolute;
+            right: -120px;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 10px;
+            background: rgba(0, 0, 0, 0.9);
+            transition: 0.3s ease;
+        }
+
+        .history-item:hover .item-actions {
+            right: 0;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid var(--gray-mid);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-del:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 45px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 30px;
+            font-weight: 200;
+            color: #fff;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 9px;
+            color: var(--gray-mid);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #board-wrapper {
+            position: relative;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
+        }
+
+        #board {
+            width: 500px;
+        }
+
+        .target-king {
+            box-shadow: inset 0 0 0 4px var(--target), 0 0 25px var(--target) !important;
+            animation: target-pulse 2s infinite;
+        }
+
+        @keyframes target-pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        canvas {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .controls-area {
+            margin-top: 30px;
+            width: 524px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 2px;
+            font-size: 11px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--gray-mid);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 25px;
+            border-radius: 2px;
+            border: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-main {
+            background: #fff;
+            color: #000;
+            flex: 2;
+        }
+
+        .btn-main:hover {
+            background: #aaa;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-outline:hover {
+            background: #222;
+        }
+
+        #turn-status {
+            font-size: 18px;
+            font-weight: 200;
+            margin-bottom: 12px;
+            color: #666;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+        }
+
+        .dot {
+            height: 10px;
+            width: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 50;
+            pointer-events: none;
+            transform: translate(27px, 27px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Process.Logs</h2>
+        <div id="history-list"></div>
+        <button class="btn btn-outline" onclick="newPuzzle()" style="margin-top:20px; width:100%">+ NEW SESSION</button>
+    </div>
+
+    <div class="main-content">
+        <div id="turn-status">Awaiting Task</div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><span class="stat-label">Units Solved</span><span class="stat-val"
+                    id="score">0</span></div>
+            <div class="stat-card"><span class="stat-label">Sequence</span><span class="stat-val" id="streak">0</span>
+            </div>
+            <div class="stat-card"><span class="stat-label">Cycle Time</span><span class="stat-val"
+                    id="timer">0.0s</span></div>
+        </div>
+
+        <div id="board-wrapper">
+            <div id="board"></div>
+            <canvas id="drawingCanvas" width="500" height="500"></canvas>
+        </div>
+
+        <div class="controls-area">
+            <div class="input-group">
+                <input type="text" id="manualSerial" placeholder="ENTER SERIAL IDENTIFIER...">
+                <button class="btn btn-main" style="padding: 10px 20px; flex: 0.5;" onclick="loadManualSerial()">LOAD
+                    SERIAL</button>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="useHint()">Request Hint</button>
+                <button class="btn btn-outline" onclick="copyCurrentSerial()">Copy ID</button>
+                <button class="btn btn-main" onclick="newPuzzle()">Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        var board = null, game = new Chess(), solution = "", currentSerial = "";
+        var score = 0, streak = 0, startTime = null, hintUsed = false;
+        var canvas = document.getElementById('drawingCanvas'), ctx = canvas.getContext('2d');
+        var historyData = JSON.parse(localStorage.getItem('stealth_final_v2')) || [];
+        var userArrows = [];
+        var isDrawing = false;
+        var startSquare = null;
+
+        function getSquareFromCoords(x, y) {
+            const $board = $('#board');
+            const offset = $board.offset();
+            const width = $board.width();
+            const sqSize = width / 8;
+
+            const relativeX = x - offset.left;
+            const relativeY = y - offset.top;
+
+            if (relativeX < 0 || relativeX >= width || relativeY < 0 || relativeY >= width) return null;
+
+            const fileIdx = Math.floor(relativeX / sqSize);
+            const rankIdx = Math.floor(relativeY / sqSize);
+
+            const orientation = board.orientation();
+
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+            let file, rank;
+            if (orientation === 'white') {
+                file = files[fileIdx];
+                rank = ranks[rankIdx];
+            } else {
+                file = files[7 - fileIdx];
+                rank = ranks[7 - rankIdx];
+            }
+            return file + rank;
+        }
+
+        score = parseInt(localStorage.getItem('stealth_final_score')) || 0;
+        $('#score').text(score);
+
+        function clearArrows() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        function highlightTargetKing() {
+            $('.target-king').removeClass('target-king');
+            let enemyColor = game.turn() === 'w' ? 'b' : 'w';
+            game.SQUARES.forEach(sq => {
+                let p = game.get(sq);
+                if (p && p.type === 'k' && p.color === enemyColor) $('.square-' + sq).addClass('target-king');
+            });
+        }
+
+        function onDragStart(source, piece) {
+            clearArrows();
+            if (game.game_over() || (game.turn() === 'w' && piece.search(/^b/) !== -1) || (game.turn() === 'b' && piece.search(/^w/) !== -1)) return false;
+            showLegalMoves(source);
+        }
+
+        function showLegalMoves(square) {
+            $('.dot').remove();
+            game.moves({ square: square, verbose: true }).forEach(m => $('#board .square-' + m.to).append('<div class="dot"></div>'));
+        }
+
+        function onDrop(source, target) {
+            $('.dot').remove();
+            let move = game.move({ from: source, to: target, promotion: 'q' });
+            if (!move) return 'snapback';
+            if (source + target !== solution) { game.undo(); streak = 0; $('#streak').text(0); return 'snapback'; }
+
+            let timeTaken = ((Date.now() - startTime) / 1000).toFixed(1);
+            if (!hintUsed) {
+                score++; streak++;
+                historyData.unshift({ serial: currentSerial, status: "SUCCESS", time: timeTaken, title: "DATA_SET_" + (historyData.length + 1) });
+            } else {
+                // User requested to log as UNSOLVED if hint used, and presumably not increment score/streak
+                streak = 0; // Reset streak on hint? Or just don't increment? User said "doesn't solve it", usually implies failure or just no points.
+                // "calc it in log that he didn't solve it" -> UNSOLVED.
+                historyData.unshift({ serial: currentSerial, status: "UNSOLVED", time: timeTaken, title: "DATA_SET_" + (historyData.length + 1) });
+            }
+            saveAndRender();
+            $('#score').text(score); $('#streak').text(streak);
+            $('#turn-status').text("Task Complete").css("color", "#fff");
+            startTime = null;
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('stealth_final_v2', JSON.stringify(historyData));
+            localStorage.setItem('stealth_final_score', score);
+            $('#history-list').empty();
+            historyData.forEach((item, i) => {
+                $('#history-list').append(`
+                    <div class="history-item">
+                        <div onclick="quickLoad('${item.serial}')">
+                            <small style="color:#555">LOG_ID: ${item.serial.substring(0, 8)}...</small><br>
+                            <b style="color:#fff">${item.title}</b><br>
+                            <small style="color:#444">${item.time}s | ${item.status}</small>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn" onclick="renameItem(event, ${i})">RENAME</button>
+                            <button class="action-btn btn-del" onclick="deleteItem(event, ${i})">DELETE</button>
+                        </div>
+                    </div>`);
+            });
+        }
+
+        function renameItem(e, i) { e.stopPropagation(); let n = prompt("New identifier:", historyData[i].title); if (n) { historyData[i].title = n; saveAndRender(); } }
+        function deleteItem(e, i) { e.stopPropagation(); if (confirm("Confirm deletion?")) { historyData.splice(i, 1); saveAndRender(); } }
+
+        function setup(data) {
+            if (!data || data.error) { alert("Invalid Serial Identifier"); return; }
+            game.load(data.fen); solution = data.move; currentSerial = data.serial; hintUsed = false;
+            board.position(data.fen);
+            clearArrows(); highlightTargetKing();
+            $('#turn-status').text(game.turn() === 'w' ? "White Sector" : "Black Sector").css("color", "#666");
+            startTime = Date.now();
+            updateTimer();
+        }
+
+        function redrawArrows() {
+            clearArrows();
+            userArrows.forEach(arrow => {
+                drawArrow(arrow.from, arrow.to, 'rgba(255, 170, 0, 0.8)'); 
+            });
+            if (hintUsed && solution) {
+                const from = solution.substring(0, 2);
+                const to = solution.substring(2, 4);
+                drawArrow(from, to, 'rgba(57, 255, 20, 0.8)'); 
+            }
+        }
+
+        function drawArrow(from, to, color) {
+            const $board = $('#board');
+            const sqSize = $board.width() / 8;
+
+            const getCenter = (sq) => {
+                const file = sq.charCodeAt(0) - 97;
+                const rank = 8 - parseInt(sq[1]);
+                const orientation = board.orientation();
+                let x, y;
+                if (orientation === 'white') {
+                    x = file * sqSize + sqSize / 2;
+                    y = rank * sqSize + sqSize / 2;
+                } else {
+                    x = (7 - file) * sqSize + sqSize / 2;
+                    y = (7 - rank) * sqSize + sqSize / 2;
+                }
+                return { x, y };
+            };
+
+            const start = getCenter(from);
+            const end = getCenter(to);
+
+            ctx.beginPath();
+            ctx.strokeStyle = color || 'rgba(57, 255, 20, 0.8)';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+
+            const angle = Math.atan2(end.y - start.y, end.x - start.x);
+            const headLen = 15;
+            ctx.beginPath();
+            ctx.moveTo(end.x, end.y);
+            ctx.lineTo(end.x - headLen * Math.cos(angle - Math.PI / 6), end.y - headLen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(end.x - headLen * Math.cos(angle + Math.PI / 6), end.y - headLen * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(end.x, end.y);
+            ctx.fillStyle = color || 'rgba(57, 255, 20, 0.8)';
+            ctx.fill();
+        }
+
+        function updateTimer() { if (startTime) { $('#timer').text(((Date.now() - startTime) / 1000).toFixed(1) + "s"); setTimeout(updateTimer, 100); } }
+        function newPuzzle() { $.get('/generate', setup); }
+        function loadManualSerial() {
+            let s = $('#manualSerial').val().trim();
+            if (s) {
+                $.get('/load', { serial: s }, setup).fail((xhr) => {
+                    const msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : "Error loading serial";
+                    alert(msg);
+                });
+            } else {
+                alert("Please enter a valid serial");
+            }
+        }
+        function useHint() {
+            if (game.game_over()) return;
+            hintUsed = true;
+            redrawArrows();
+        }
+        function quickLoad(s) {
+            $.get('/load', { serial: s }, setup).fail((xhr) => {
+                const msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : "Error loading serial";
+                alert(msg);
+            });
+        }
+        function copyCurrentSerial() {
+            if (currentSerial) {
+                navigator.clipboard.writeText(currentSerial);
+                const btn = event.currentTarget || document.querySelector('button[onclick="copyCurrentSerial()"]');
+                const originalText = btn.innerText;
+                btn.innerText = "COPIED!";
+                setTimeout(() => btn.innerText = originalText, 1500);
+            }
+        }
+
+        $(document).ready(function () {
+            board = Chessboard('board', {
+                draggable: true, position: 'start', onDragStart: onDragStart, onDrop: onDrop,
+                pieceTheme: (p) => '/static/pieces/' + p.toLowerCase() + '.png'
+            });
+
+            $('#board-wrapper').on('contextmenu', e => e.preventDefault());
+
+            const $wrapper = $('#board-wrapper');
+
+            $wrapper.on('mousedown', function (e) {
+                if (e.button === 2) { // Right click
+                    const sq = getSquareFromCoords(e.pageX, e.pageY);
+                    if (sq) {
+                        isDrawing = true;
+                        startSquare = sq;
+                    }
+                } else if (e.button === 0) { // Left click
+                    userArrows = [];
+                    hintUsed = false;
+                    clearArrows();
+                }
+            });
+
+            $wrapper.on('mouseup', function (e) {
+                if (isDrawing && e.button === 2) {
+                    const endSquare = getSquareFromCoords(e.pageX, e.pageY);
+                    if (startSquare && endSquare && startSquare !== endSquare) {
+                        // Check if arrow already exists, remove it if so (toggle)
+                        const existingIdx = userArrows.findIndex(a => a.from === startSquare && a.to === endSquare);
+                        if (existingIdx !== -1) {
+                            userArrows.splice(existingIdx, 1);
+                        } else {
+                            userArrows.push({ from: startSquare, to: endSquare });
+                        }
+                        redrawArrows();
+                    }
+                    isDrawing = false;
+                    startSquare = null;
+                }
+            });
+
+            saveAndRender(); newPuzzle();
+        });
+    </script>
+</body>
+
+</html>

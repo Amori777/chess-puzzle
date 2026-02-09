@@ -28,7 +28,7 @@ This project is a web-based chess application designed to generate "Mate in One"
 * **Persistence:** Save your progress and history in local storage.
 
 <p align="center">
-  <img src="screenshots/Fourth.png" alt="Project Preview" width="600">
+  <img src="screenshots/Fourth.png" alt="Project Preview" width="400">
 </p>
 
 ---

@@ -45,4 +45,4 @@ This project is a web-based chess application designed to generate "Mate in One"
 
 1. **Clone the repo:**
    ```bash
-   git clone [https://github.com/Amori777/chess-puzzle.git](https://github.com/Amori777/chess-puzzle.git)
+   git clone [https://github.com/3mrLogic/chess-puzzle.git](https://github.com/3mrLogic/chess-puzzle.git)
